@@ -6,12 +6,14 @@ from src.Tarea_1 import (
     continuous_square, discrete_square
 )
 from src.Tarea_2 import understanding_freq
+from src.Tarea_3 import compare_sine_signals
+from src.Tarea_4 import analyze_dac_resolution
 
 
 def main(options):
-    if options[1] == "Tarea_1":
+    if options[1].lower() == "tarea_1":
         if len(options) < 3:
-            print("Por favor especifica el tipo de señal: seno, exponencial, triangular, cuadrada")
+            print("Qué señal quieres: seno, exponencial, triangular, cuadrada")
             return
 
         signal_type = options[2].lower()
@@ -29,16 +31,32 @@ def main(options):
             continuous_square()
             discrete_square()
         else:
-            print("Tipo de señal no reconocido. Usa: seno, exponencial, triangular o cuadrada.")
+            print("No tengo esa. Usa: seno, exponencial, triangular o cuadrada.")
 
-    elif options[1] == "Tarea_2":
+    elif options[1].lower() == "tarea_2":
         if len(options) > 2:
             understanding_freq(options[2])
         else:
-            print("Por favor proporciona una frecuencia. Ejemplo: python main.py Tarea_2 2")
+            print("Dame una frecuencia. Ejemplo: python main.py tarea_2 2")
+
+    elif options[1].lower() == "tarea_3":
+        if len(options) < 5:
+            print("Faltan argumentos. Uso: python main.py tarea_3 <A> <f> <phi>")
+            return
+        A = float(options[2])
+        f = float(options[3])
+        phi = float(options[4])
+        compare_sine_signals(A, f, phi)
+
+    elif options[1].lower() == "tarea_4":
+        if len(options) < 3:
+            print("Falta el número de bits. Ejemplo: python main.py tarea_4 8")
+            return
+        bits = int(options[2])
+        analyze_dac_resolution(bits)
 
     else:
-        print("Opción no reconocida. Usa: Tarea_1 o Tarea_2")
+        print("Tarea no reconocida. Usa: tarea_1, tarea_2, tarea_3 o tarea_4")
 
 
 if __name__ == '__main__':
@@ -46,10 +64,9 @@ if __name__ == '__main__':
     if len(args) > 1:
         main(args)
     else:
-        print("Por favor proporciona un argumento")
+        print("Dame un argumento")
         print("Ejemplos:")
-        print("  python main.py Tarea_1 seno")
-        print("  python main.py Tarea_1 exponencial")
-        print("  python main.py Tarea_1 triangular")
-        print("  python main.py Tarea_1 cuadrada")
-        print("  python main.py Tarea_2 2")
+        print(" python main.py tarea_1 seno")
+        print(" python main.py tarea_2 2")
+        print(" python main.py tarea_3 1 2 0.785")
+        print(" python main.py tarea_4 8")
