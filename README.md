@@ -1,42 +1,108 @@
-# 📊 Análisis y Visualización de Señales
+Descripción general
+Este repositorio contiene cuatro scripts de Python para generar, analizar y graficar diferentes tipos de señales y funciones relacionadas con procesamiento de señales y electrónica digital. Se utilizan funciones personalizadas para graficar señales continuas y discretas, así como para analizar la resolución de un DAC (Convertidor Digital a Analógico).
 
-Proyecto en Python para graficar diferentes tipos de señales en sus formas **continuas y discretas**, además de una señal senoidal con **frecuencia variable**, como parte de la materia de Procesamiento de Señales.
+Contenido
+1. Señales clásicas continuas y discretas
+Archivo: signals.py (o nombre similar)
 
----
+Genera señales senoidales, exponenciales, triangulares y cuadradas en forma continua y discreta.
 
-## 📁 Estructura del Proyecto
+Utiliza numpy para cálculos numéricos y scipy.signal para señales especiales (triangular, cuadrada).
 
-├── main.py # Punto de entrada para ejecutar tareas desde terminal
-├── README.md # Este archivo de documentación
-├── requirements.txt # Librerías necesarias para correr el proyecto
-└── src/
-├── Tarea_1.py # Señales: senoidal, exponencial, triangular y cuadrada
-├── Tarea_2.py # Señal senoidal con frecuencia variable
-└── utils/
-└── grapher.py # Funciones para graficar señales continuas y discretas
+Usa funciones personalizadas continuous_plotter y discrete_plotter para graficar las señales.
 
+Funciones principales:
 
----
+continuous_sine()
 
-## 🧠 Funcionalidades
+discrete_sine()
 
-### 🔹 Tarea 1 – Tipos de Señales
+continuous_exponential()
 
-Incluye las siguientes señales, tanto en forma continua como discreta:
+discrete_exponential()
 
-| Tipo de señal    | Notación continua                 | Notación discreta                    |
-|------------------|-----------------------------------|--------------------------------------|
-| Senoidal         | `x₁(t) = sin(2π·f·t)`              | `x₁[n] = sin(2π·f·n)`                |
-| Exponencial      | `x₂(t) = e^(–2t)·u(t)`             | `x₂[n] = e^(–2·n·Ts)·u[n]`           |
-| Triangular       | `x₃(t) = tri(t, f)`                | `x₃[n] = tri(n·Ts, f)`               |
-| Cuadrada         | `x₄(t) = sq(t, f)`                 | `x₄[n] = sq(n·Ts, f)`                |
+continuous_triangle()
 
----
+discrete_triangle()
 
-### 🔹 Tarea 2 – Señal Senoidal con Frecuencia Variable
+continuous_square()
 
-Permite visualizar una señal senoidal continua con la frecuencia deseada por el usuario.
+discrete_square()
 
-```python
-x(t) = sin(2π·f·t)
+2. Generación de señal senoidal continua con frecuencia definida por el usuario
+Archivo: user_sine_freq.py (o nombre similar)
 
+Permite generar y graficar una señal senoidal continua con una frecuencia definida por el usuario.
+
+Parámetros ajustables: frecuencia, tiempo inicial y final, número de puntos para suavidad de la gráfica.
+
+Función principal:
+
+understanding_freq(des_freq)
+
+3. Comparación entre señales senoidales continuas y discretas con parámetros variables
+Archivo: compare_sine.py (o nombre similar)
+
+Compara señales senoidales de referencia (amplitud 1, frecuencia 1 Hz, fase 0) con señales modificadas que pueden cambiar amplitud, frecuencia y fase.
+
+Grafica ambas señales tanto en forma continua como discreta usando funciones personalizadas.
+
+Función principal:
+
+compare_sine_signals(amplitude, frequency, phase)
+
+4. Análisis de resolución de un DAC
+Archivo: dac_analysis.py (o nombre similar)
+
+Analiza la resolución de un DAC dado un número de bits de entrada.
+
+Calcula niveles totales, tamaño del paso y resolución porcentual.
+
+Genera y grafica la salida analógica correspondiente a las entradas digitales.
+
+Usa función personalizada dac_plotter para la gráfica.
+
+Función principal:
+
+analyze_dac_resolution(bits)
+
+Requisitos
+Python 3.x
+
+Librerías:
+
+numpy
+
+scipy
+
+matplotlib (asumido para las funciones de graficación personalizadas)
+
+Módulo personalizado src.utils.grapher con las funciones:
+
+continuous_plotter
+
+discrete_plotter
+
+dac_plotter
+
+Cómo usar
+Clonar el repositorio.
+
+Asegurarse de tener instaladas las librerías necesarias.
+
+Ejecutar cada script o importar las funciones para generar las señales y gráficos deseados.
+
+Ejemplo de ejecución para generar señal senoidal continua con frecuencia 3 Hz:
+
+python
+Copiar
+Editar
+from user_sine_freq import understanding_freq
+understanding_freq(3)
+Ejemplo para analizar resolución DAC de 8 bits:
+
+python
+Copiar
+Editar
+from dac_analysis import analyze_dac_resolution
+analyze_dac_resolution(8)
