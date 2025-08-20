@@ -1,72 +1,106 @@
 import sys
-from src.Tarea_1 import (
-    continuous_sine, discrete_sine,
-    continuous_exponential, discrete_exponential,
-    continuous_triangle, discrete_triangle,
-    continuous_square, discrete_square
-)
-from src.Tarea_2 import understanding_freq
-from src.Tarea_3 import compare_sine_signals
-from src.Tarea_4 import analyze_dac_resolution
+import argparse
+from src.examen_p1 import SignalParams, run_examen_p1
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from reportlab.lib.units import cm
 
+def make_report(pdf_path: str, summary: dict, repo_url: str = "AGREGA_AQUI_LA_URL_DE_TU_REPO"):
+    c = canvas.Canvas(pdf_path, pagesize=A4)
+    W, H = A4
 
-def main(options):
-    if options[1].lower() == "tarea_1":
-        if len(options) < 3:
-            print("Qué señal quieres: seno, exponencial, triangular, cuadrada")
-            return
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(2*cm, H-2*cm, "Reporte: DFT de señal modulada en amplitud")
 
-        signal_type = options[2].lower()
+    c.setFont("Helvetica", 11)
+    y = H-3*cm
+    lines = [
+        f"Fecha de ejecución: {__import__('datetime').datetime.now()}",
+        f"Parámetros: N={summary['N']}, f_s={summary['fs']} Hz, Δf={summary['delta_f']:.6f} Hz",
+        "Picos espectrales (frecuencia [Hz], amplitud relativa):"
+    ]
+    for L in lines:
+        c.drawString(2*cm, y, L)
+        y -= 0.7*cm
 
-        if signal_type == "seno":
-            continuous_sine()
-            discrete_sine()
-        elif signal_type == "exponencial":
-            continuous_exponential()
-            discrete_exponential()
-        elif signal_type == "triangular":
-            continuous_triangle()
-            discrete_triangle()
-        elif signal_type == "cuadrada":
-            continuous_square()
-            discrete_square()
-        else:
-            print("No tengo esa. Usa: seno, exponencial, triangular o cuadrada.")
-
-    elif options[1].lower() == "tarea_2":
-        if len(options) > 2:
-            understanding_freq(options[2])
-        else:
-            print("Dame una frecuencia. Ejemplo: python main.py tarea_2 2")
-
-    elif options[1].lower() == "tarea_3":
-        if len(options) < 5:
-            print("Faltan argumentos. Uso: python main.py tarea_3 <A> <f> <phi>")
-            return
-        A = float(options[2])
-        f = float(options[3])
-        phi = float(options[4])
-        compare_sine_signals(A, f, phi)
-
-    elif options[1].lower() == "tarea_4":
-        if len(options) < 3:
-            print("Falta el número de bits. Ejemplo: python main.py tarea_4 8")
-            return
-        bits = int(options[2])
-        analyze_dac_resolution(bits)
-
+    if not summary["peaks"]:
+        c.drawString(2.5*cm, y, "No se detectaron picos con el umbral indicado.")
+        y -= 0.7*cm
     else:
-        print("Tarea no reconocida. Usa: tarea_1, tarea_2, tarea_3 o tarea_4")
+        for pk in summary["peaks"]:
+            c.drawString(2.5*cm, y, f"- {pk['freq']:.4f} Hz, {pk['rel_amp']:.3f}")
+            y -= 0.6*cm
 
+    # Insertar imágenes si hay espacio
+    def add_image(path, y_top, title):
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(2*cm, y_top, title)
+        c.drawImage(path, 2*cm, y_top-8.5*cm, width=16*cm, height=8*cm, preserveAspectRatio=True, anchor='n')
+        return y_top-9.0*cm
 
-if __name__ == '__main__':
-    args = sys.argv
-    if len(args) > 1:
-        main(args)
+    y -= 0.5*cm
+    try:
+        y = add_image("outputs/tiempo_continuo.png", y, "Señal continua")
+    except Exception:
+        pass
+
+    if y < 10*cm:
+        c.showPage()
+        y = H-2*cm
+
+    try:
+        y = add_image("outputs/tiempo_discreto.png", y, "Señal discreta")
+    except Exception:
+        pass
+
+    if y < 10*cm:
+        c.showPage()
+        y = H-2*cm
+
+    try:
+        y = add_image("outputs/espectro_mag.png", y, "Espectro de magnitud")
+    except Exception:
+        pass
+
+    # URL del repositorio
+    c.setFont("Helvetica", 11)
+    c.drawString(2*cm, 2*cm, f"URL del repositorio: {repo_url}")
+    c.save()
+
+def main():
+    parser = argparse.ArgumentParser(description="Ejecuta práctica examen_p1")
+    subparsers = parser.add_subparsers(dest="command")
+
+    # Subcomando examen_p1
+    p1 = subparsers.add_parser("examen_p1", help="Analiza la señal y calcula DFT")
+    p1.add_argument("--fs", type=float, default=256.0)
+    p1.add_argument("--duration", type=float, default=4.0)
+    p1.add_argument("--m", type=float, default=0.5)
+    p1.add_argument("--fm", type=float, default=0.5)
+    p1.add_argument("--fc", type=float, default=8.0)
+    p1.add_argument("--peak_threshold", type=float, default=0.05)
+
+    args = parser.parse_args()
+
+    if args.command == "examen_p1":
+        params = SignalParams(fm=args.fm, fc=args.fc, m=args.m, fs=args.fs, duration=args.duration)
+        summary = run_examen_p1(params, outdir="outputs", peak_threshold=args.peak_threshold)
+
+        # Generar reporte PDF
+        make_report("outputs/reporte.pdf", summary)
+
+        # Mostrar en consola
+        print(f"N = {summary['N']}")
+        print(f"fs = {summary['fs']} Hz")
+        print(f"Δf = {summary['delta_f']:.6f} Hz")
+        if summary["peaks"]:
+            print("Picos espectrales detectados (f [Hz], amp_rel):")
+            for pk in summary["peaks"]:
+                print(f" - {pk['freq']:.4f} Hz, {pk['rel_amp']:.3f}")
+        else:
+            print("No se detectaron picos.")
     else:
-        print("Dame un argumento")
-        print("Ejemplos:")
-        print(" python main.py tarea_1 seno")
-        print(" python main.py tarea_2 2")
-        print(" python main.py tarea_3 1 2 0.785")
-        print(" python main.py tarea_4 8")
+        parser.print_help()
+
+if __name__ == "__main__":
+    main()
