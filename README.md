@@ -1,113 +1,17 @@
-📈 Señales y Análisis DAC en Python
-Repositorio con scripts para generar, comparar y analizar señales en tiempo continuo y discreto, además de realizar análisis de resolución de un DAC (Convertidor Digital a Analógico).
+# Transformada de Fourier Discreta (DFT) — `examen_p1`
 
-Contenido
-Descripción de los scripts
+## Objetivo
+Aplicar la **Transformada de Fourier Discreta (DFT)** a señales muestreadas; identificar picos espectrales, **estimar frecuencias y amplitudes relativas**; y calcular/usar la **resolución en frecuencia** \(\Delta f = f_s/N\).
 
-Requisitos
+## Señal de trabajo
+Se analiza la señal:
+\[
+x(t) = \big[1 + m\cos(2\pi f_m t)\big]\sin(2\pi f_c t)
+\]
+Parámetros por defecto: `fm = 0.5 Hz`, `fc = 8 Hz`, `m = 0.5`.
 
-Instrucciones de uso
+- **Picos esperados** (AM de una sola tono): \(f_c \pm f_m\) y \(f_c\).
+  - Para los valores por defecto: **7.5 Hz**, **8.0 Hz**, **8.5 Hz**.
+  - Amplitudes **relativas** aproximadas: **0.25**, **1.00**, **0.25** (con la normalización usada).
 
-Funciones destacadas
-
-Contribuciones
-
-Licencia
-
-Descripción de los scripts
-1. signals.py
-Genera y grafica señales clásicas:
-
-Señales continuas y discretas:
-
-Senoidal
-
-Exponencial
-
-Triangular
-
-Cuadrada
-
-Utiliza numpy, scipy.signal y funciones personalizadas para graficar.
-
-2. user_sine_freq.py
-Genera una señal senoidal continua con frecuencia definida por el usuario.
-
-Parámetros configurables:
-
-Frecuencia
-
-Tiempo inicial y final
-
-Número de puntos para la gráfica
-
-3. compare_sine.py
-Compara señales senoidales continuas y discretas con parámetros modificables:
-
-Amplitud
-
-Frecuencia
-
-Fase
-
-Grafica la señal de referencia y la modificada para análisis visual.
-
-4. dac_analysis.py
-Realiza análisis de resolución de un DAC:
-
-Calcula niveles totales, tamaño de paso y resolución porcentual.
-
-Grafica la salida analógica en función de la entrada digital.
-
-Requisitos
-Python 3.x
-
-Librerías:
-
-numpy
-
-scipy
-
-matplotlib (usado en funciones de graficación personalizadas)
-
-Módulo personalizado src.utils.grapher que debe incluir:
-
-continuous_plotter
-
-discrete_plotter
-
-dac_plotter
-
-Instrucciones de uso
-Clonar este repositorio.
-
-Instalar dependencias:
-
-bash
-Copiar
-Editar
-pip install numpy scipy matplotlib
-Ejecutar o importar las funciones en un script o consola Python.
-
-Funciones destacadas
-python
-Copiar
-Editar
-# Generar señal senoidal con frecuencia personalizada
-from user_sine_freq import understanding_freq
-understanding_freq(3)
-
-# Comparar señales senoidales
-from compare_sine import compare_sine_signals
-compare_sine_signals(amplitude=2, frequency=1.5, phase=0.5)
-
-# Analizar resolución DAC para 8 bits
-from dac_analysis import analyze_dac_resolution
-analyze_dac_resolution(8)
-Contribuciones
-Contribuciones para mejorar la visualización, agregar nuevos tipos de señales o funciones son bienvenidas.
-Por favor, abre un issue o un pull request.
-
-Licencia
-Este proyecto está bajo licencia MIT.
-
+## Estructura del repositorio
