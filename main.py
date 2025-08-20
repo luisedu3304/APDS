@@ -1,104 +1,87 @@
-import sys
 import argparse
-from src.examen_p1 import SignalParams, run_examen_p1
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
-from reportlab.lib.units import cm
+import os
+import sys
+import subprocess
+import shutil
+from src.examen_p2 import SignalParams, run_examen_p2
 
-def make_report(pdf_path: str, summary: dict, repo_url: str = "AGREGA_AQUI_LA_URL_DE_TU_REPO"):
-    c = canvas.Canvas(pdf_path, pagesize=A4)
-    W, H = A4
+def _abs(path: str) -> str:
+    return os.path.abspath(path)
 
-    c.setFont("Helvetica-Bold", 16)
-    c.drawString(2*cm, H-2*cm, "Reporte: DFT de señal modulada en amplitud")
-
-    c.setFont("Helvetica", 11)
-    y = H-3*cm
-    lines = [
-        f"Fecha de ejecución: {__import__('datetime').datetime.now()}",
-        f"Parámetros: N={summary['N']}, f_s={summary['fs']} Hz, Δf={summary['delta_f']:.6f} Hz",
-        "Picos espectrales (frecuencia [Hz], amplitud relativa):"
-    ]
-    for L in lines:
-        c.drawString(2*cm, y, L)
-        y -= 0.7*cm
-
-    if not summary["peaks"]:
-        c.drawString(2.5*cm, y, "No se detectaron picos con el umbral indicado.")
-        y -= 0.7*cm
-    else:
-        for pk in summary["peaks"]:
-            c.drawString(2.5*cm, y, f"- {pk['freq']:.4f} Hz, {pk['rel_amp']:.3f}")
-            y -= 0.6*cm
-
-    # Insertar imágenes si hay espacio
-    def add_image(path, y_top, title):
-        c.setFont("Helvetica-Bold", 12)
-        c.drawString(2*cm, y_top, title)
-        c.drawImage(path, 2*cm, y_top-8.5*cm, width=16*cm, height=8*cm, preserveAspectRatio=True, anchor='n')
-        return y_top-9.0*cm
-
-    y -= 0.5*cm
+def _open_in_vscode(path: str) -> bool:
+    """Intenta abrir el archivo en la ventana actual de VS Code."""
+    code = shutil.which("code") or shutil.which("code.cmd") or shutil.which("code.exe")
+    if not code:
+        return False
     try:
-        y = add_image("outputs/tiempo_continuo.png", y, "Señal continua")
+        # --reuse-window abre en la misma ventana de VS Code
+        subprocess.run([code, "--reuse-window", _abs(path)], check=False)
+        print(f"Abriendo en VS Code: {path}")
+        return True
     except Exception:
-        pass
+        return False
 
-    if y < 10*cm:
-        c.showPage()
-        y = H-2*cm
-
+def _open_in_system(path: str):
+    """Fallback: abre con el visor por defecto del SO."""
     try:
-        y = add_image("outputs/tiempo_discreto.png", y, "Señal discreta")
-    except Exception:
-        pass
-
-    if y < 10*cm:
-        c.showPage()
-        y = H-2*cm
-
-    try:
-        y = add_image("outputs/espectro_mag.png", y, "Espectro de magnitud")
-    except Exception:
-        pass
-
-    # URL del repositorio
-    c.setFont("Helvetica", 11)
-    c.drawString(2*cm, 2*cm, f"URL del repositorio: {repo_url}")
-    c.save()
+        if os.name == "nt":  # Windows
+            subprocess.run(["cmd", "/c", "start", "", _abs(path)], shell=False, check=False)
+        elif sys.platform == "darwin":  # macOS
+            subprocess.run(["open", _abs(path)], check=False)
+        else:  # Linux
+            subprocess.run(["xdg-open", _abs(path)], check=False)
+        print(f"Abriendo en el sistema: {path}")
+    except Exception as e:
+        print(f"No pude abrir {path}: {e}")
 
 def main():
-    parser = argparse.ArgumentParser(description="Ejecuta práctica examen_p1")
-    subparsers = parser.add_subparsers(dest="command")
+    parser = argparse.ArgumentParser(description="Ejecuta práctica examen_p2 (señal discreta + ruido determinista)")
+    sp = parser.add_subparsers(dest="command")
 
-    # Subcomando examen_p1
-    p1 = subparsers.add_parser("examen_p1", help="Analiza la señal y calcula DFT")
-    p1.add_argument("--fs", type=float, default=256.0)
-    p1.add_argument("--duration", type=float, default=4.0)
-    p1.add_argument("--m", type=float, default=0.5)
-    p1.add_argument("--fm", type=float, default=0.5)
-    p1.add_argument("--fc", type=float, default=8.0)
-    p1.add_argument("--peak_threshold", type=float, default=0.05)
+    p2 = sp.add_parser("examen_p2", help="Genera señal, añade ruido tonal y analiza con DFT")
+    p2.add_argument("--f1", type=float, default=8.0)
+    p2.add_argument("--a1", type=float, default=1.0)
+    p2.add_argument("--f2", type=float, default=20.0)
+    p2.add_argument("--a2", type=float, default=0.5)
+    p2.add_argument("--fn", type=float, default=12.0)
+    p2.add_argument("--an", type=float, default=0.4)
+    p2.add_argument("--fs", type=float, default=256.0)
+    p2.add_argument("--duration", type=float, default=6.0)
+    p2.add_argument("--peak_threshold", type=float, default=0.05)
 
     args = parser.parse_args()
+    if args.command == "examen_p2":
+        params = SignalParams(
+            f1=args.f1, a1=args.a1, f2=args.f2, a2=args.a2,
+            fn=args.fn, an=args.an, fs=args.fs, duration=args.duration
+        )
+        summary = run_examen_p2(params, outdir="outputs", peak_threshold=args.peak_threshold)
 
-    if args.command == "examen_p1":
-        params = SignalParams(fm=args.fm, fc=args.fc, m=args.m, fs=args.fs, duration=args.duration)
-        summary = run_examen_p1(params, outdir="outputs", peak_threshold=args.peak_threshold)
-
-        # Generar reporte PDF
-        make_report("outputs/reporte.pdf", summary)
-
-        # Mostrar en consola
+        # Consola
         print(f"N = {summary['N']}")
         print(f"fs = {summary['fs']} Hz")
         print(f"Δf = {summary['delta_f']:.6f} Hz")
-        if summary["peaks"]:
-            print("Picos espectrales detectados (f [Hz], amp_rel):")
-            for pk in summary["peaks"]:
-                print(f" - {pk['freq']:.4f} Hz, {pk['rel_amp']:.3f}")
-        else:
-            print("No se detectaron picos.")
+        print("Picos (limpia):")
+        for pk in summary["peaks_clean"]:
+            print(f" - {pk['freq']:.4f} Hz, {pk['rel_amp']:.3f}")
+        print("Picos (con ruido):")
+        for pk in summary["peaks_noisy"]:
+            print(f" - {pk['freq']:.4f} Hz, {pk['rel_amp']:.3f}")
+
+        # Abrir automáticamente las imágenes generadas → primero VS Code, si no, el sistema
+        to_open = [
+            "outputs/tiempo_discreto_limpia.png",
+            "outputs/tiempo_discreto_ruido.png",
+            "outputs/espectro_limpia.png",
+            "outputs/espectro_ruido.png",
+            "outputs/espectro_comparacion.png",
+        ]
+        for p in to_open:
+            if os.path.exists(p):
+                if not _open_in_vscode(p):
+                    _open_in_system(p)
+            else:
+                print(f"[Aviso] No existe: {p}")
     else:
         parser.print_help()
 
